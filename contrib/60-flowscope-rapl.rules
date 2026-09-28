@@ -1,0 +1,14 @@
+# Let members of the "rapl" group read the CPU energy counters (Intel and AMD
+# RAPL) that Flowscope's power layer uses for CPU package / core power.
+#
+# The kernel makes energy_uj root-only because fine-grained energy readings can
+# leak information about other processes (CVE-2020-8694, "PLATYPUS"), so only
+# add trusted users to the group.
+#
+#   sudo groupadd -r rapl && sudo usermod -aG rapl "$USER"
+#   sudo install -m 644 contrib/60-flowscope-rapl.rules /etc/udev/rules.d/
+#   sudo udevadm control --reload
+#   sudo udevadm trigger --subsystem-match=powercap --action=add
+#
+# then log out and back in (or start Flowscope with `sg rapl -c '...'`).
+ACTION=="add", SUBSYSTEM=="powercap", KERNEL=="intel-rapl:*", RUN+="/bin/chgrp rapl /sys%p/energy_uj", RUN+="/bin/chmod g+r /sys%p/energy_uj"
